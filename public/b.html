@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <button id="btn">nihao</button>
+    <script>
+        var btn = document.getElementById('btn')
+        Notification.requestPermission().then(function(permission) {
+            if(permission === 'granted'){
+                console.log('用户允许通知');
+            }else if(permission === 'denied'){
+                console.log('用户拒绝通知');
+            }
+        });
+        // var n = new Notification('状态更新提醒',{
+        //     body: '你的朋友圈有3条新状态，快去查看吧'
+        // })
+
+        // setTimeout(function() {
+        //     n.close();
+        // }, 3000);
+        btn.onclick = function(){
+            console.log('121')
+            var n = new Notification('状态更新提醒',{
+                body: '你的朋友圈有3条新状态，快去查看吧',
+                tag: 'linxin',
+                icon: 'http://blog.gdfengshuo.com/images/avatar.jpg',
+                requireInteraction: true
+            })
+            console.log(n)
+        }
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+        var testREg =[
+            {text:'666'}
+        ]
+        //  设备信息获取
+        var browser = {  
+            versions: function() {  
+                var u = navigator.userAgent, app = navigator.appVersion;  
+                return {     //移动终端浏览器版本信息  
+                    trident: u.indexOf('Trident') > -1, //IE内核  
+                    presto: u.indexOf('Presto') > -1, //opera内核  
+                    webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核  
+                    gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核  
+                    mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端  
+                    ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端  
+                    android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或uc浏览器  
+                    iPhone: u.indexOf('iPhone') > -1, //是否为iPhone或者QQHD浏览器  
+                    iPad: u.indexOf('iPad') > -1, //是否iPad  
+                    webApp: u.indexOf('Safari') == -1 //是否web应该程序，没有头部与底部  
+                };  
+            } (),  
+            language: (navigator.browserLanguage || navigator.language).toLowerCase()  
+        }  
+        //  userid 用户自己的id  timeid  服务端时间  getid  接收者id    getname  接收者姓名
+        var receiveInfo = {
+            name:'ALL',
+            id:'ALL',
+            img:'ALL'
+        };
+        var senderInfo = {
+            name:'',
+            id:'',
+            img:''
+        };
+        var contactid = 'ALL';
+        // 聊天容器高度
+        var HeightBox = $('.conetent-text-box').innerHeight();
+        var socket = io.connect('ws://scopeman.cn'),userid;
+
+        socket.on('connect',function(){
+            userid = socket.id;
+            setTimeout(function(){
+                $('#loading').fadeOut();
+            },500);
+        });
+        //  接收信息
+        socket.on("message", function(obj) {
+            getMsg(obj);
+        });
+
+        socket.on('loginIn',function(obj){
+            if(obj.id==userid){
+                $('#id_ALL .textbox').append(timetmp({time:formatDate(obj.timeTip)}));
+                $('#title-name').text(obj.name);
+                $('#title-img').attr('src',obj.img);
+            }else{
+                $('#mCSB_1_container').append(peopletmp(obj));
+                $('#id_ALL .textbox').append(tiptmp());
+            }
+            $('#id_ALL .textbox').append(tiptmp({tips:"--"+obj.name+'--加入聊天室'}));
+        });
+
+        socket.on("loginOut", function(obj) {
+            if(obj.status==1){
+                $('#'+obj.senderInfo.id).addClass('out');
+
+            }else if(obj.status==0){
+                var useid = $('#'+obj.senderInfo.id),box = $('#id_'+obj.contactid);
+                useid.length&&useid.parent().remove();
+                box.length&&box.remove();
+                contactid!='ALL'&&$('#id_ALL').fadeIn();
+                $('#id_ALL .textbox').append(tiptmp({tips:"--"+obj.senderInfo.name+'--离开聊天室'}));
+
+            }else if(obj.status==2){
+                $('#'+obj.senderInfo.id).removeClass('out');
+            }
+            
+        });
+        
+        //接收消息方法
+        function getMsg(obj){
+            
+            //  时间提醒
+            if(obj.timeTip){
+                $('#id_'+obj.contactid+' .textbox').append(timetmp({time:formatDate(obj.timeTip)}));
+            }
+
+            //  判断是群聊还是私聊
+            if(obj.contactid != "ALL"){
+                //  私聊
+                privateChat(obj)
+            }else{
+                //  群聊
+                groupChat(obj)
+            }
+        }
+        //  群聊方法
+        function groupChat(obj){
+            if(obj.sender.id == userid){
+                // 发送者
+                if(obj.shake){
+                    obj.text = '群抖动暂时开放--保护聊天环境请少用。';
+                    shakeFun(obj);
+                }else{
+                   $('#id_ALL .textbox').append(sendmsgtmp(obj));
+                }
+                //  滚动
+                boxScrollTop(obj)
+                
+            }else{
+                // 接收者
+                if(obj.shake){
+                    obj.text = '群里有人发了震动！';
+                    shakeFun(obj);
+                }else{
+                    $('#id_ALL .textbox').append(getmsgtmp(obj));
+                }
+                // 滚动
+                boxScrollTop(obj)
+                //  收信息提醒
+                messageTips(obj);
+            }
+            $('#show-text').val('');
+        }
+        // 私聊方法
+        function privateChat(obj){
+            if(obj.sender.id == userid){
+                // 发送者
+                if(obj.shake){
+                    obj.text = '你给对方发动了一个抖动';
+                    shakeFun(obj);
+                }else{
+                   $('#id_'+obj.contactid+' .textbox').append(sendmsgtmp(obj));
+                   $('#show-text').val('');
+                }
+                boxScrollTop(obj)
+            }
+            if(obj.receive.id == userid){
+                // 接收者
+                if($("#"+obj.sender.id).length==0){
+                    $('#mCSB_1_container').append(peopletmp1(obj)); 
+                }else{
+                    $("#"+obj.sender.id).attr('ids',obj.contactid);
+                }
+                if($('#id_'+obj.contactid).length==0){
+                    $('.content-info').append(createchatroom(obj.contactid,"display:none"));
+                }
+                // 抖动消息
+                if(obj.shake){
+                    obj.text = '对方给你发动了一个抖动';
+                    shakeFun(obj)
+                }else{
+                    $('#id_'+obj.contactid+' .textbox').append(getmsgtmp(obj));
+                }
+                //  滚动
+                boxScrollTop(obj)
+                //  收信息提示
+                messageTips(obj)
+            }
+        }
+        //  计算容器滚动
+        function boxScrollTop(obj){
+            var h = $('#id_'+obj.contactid).find('.textbox').height();
+            setTimeout(function(){
+                var h = $('#id_'+obj.contactid).find('.textbox').height();
+                if(h>HeightBox){
+                    $('#id_'+obj.contactid).animate({scrollTop:h-HeightBox+50},500)
+                }
+            },0)
+        }
+        // 消息抖动方法
+        function shakeFun(obj){
+            $('#id_'+obj.contactid+' .textbox').append(shaketmp(obj));
+            $('.chat-interface').addClass('shake-animate');
+            timer = setTimeout(function(){
+                $('.chat-interface').removeClass('shake-animate');
+            },2000)
+        }
+        //  消息提醒
+        function messageTips(obj){
+            var id = $('.content-bar li.active').find('span').attr('id'),ids;
+            if(obj.receive.id=='ALL'){
+                ids = 'ALLUser';
+            }else{
+                ids = obj.sender.id
+            }
+            if(id!=ids){
+                var dom = $('#'+ids).parent();
+                if(dom.find('i').length==0){
+                    dom.append("<i class='breath'>1</i>");
+                }else{
+                    var num = parseInt(dom.find('i').text())+1;
+                    dom.find('i').text(num) 
+                }
+
+                // 手机端接收信息提示
+                if (browser.versions.mobile) {
+                    $('.info-3').addClass('tipMsg');
+                }
+                
+            }
+        }
+        // 人物模板
+        function peopletmp(obj){
+            var text = "<li>\
+                            <div class='line'></div>\
+                            <img src='"+obj.img+"' alt=''>\
+                            <b>"+obj.name+"</b>\
+                            <span id="+obj.id+"></span>\
+                        </li>";
+            return text;
+        }
+        function peopletmp1(obj){
+            var text = "<li>\
+                            <div class='line'></div>\
+                            <img src='"+obj.sender.img+"' alt=''>\
+                            <b>"+obj.sender.name+"</b>\
+                            <span ids="+obj.contactid+" id='"+obj.sender.id+"'></span>\
+                        </li>";
+            return text;
+        }
+        // 发送消息模板
+        function sendmsgtmp(obj){
+            var imgstr = '',w = 150;
+            if(obj.uploadimg){
+                if(obj.fileobj.type == 'img'){
+                    if(obj.fileobj.width<100){ w = obj.fileobj.width;}
+                    imgstr = "<div class='img-content-show' style='padding-top:"+100/obj.fileobj.scale+"%;width:"+w+"px'><img src='../"+obj.uploadimg+"' class='text-img' data-show='show' onload='loadimg(this)'></div>";
+                }else{
+                    imgstr = "<div class='img-content-show' style='width:100px;height:100px;'><a href='../"+obj.uploadimg+"' download='"+obj.fileobj.name+"'><img src='../user/"+obj.fileobj.type+".png' class='text-img'  onload='loadimg(this)'></a></div>";
+                }
+            }
+            var text = "<div class='chat-item'>\
+                            <div class='msgname msgname-send'>"+obj.sender.name+"</div>\
+                            <div class='chat-list chat-our'>\
+                                <div class='chat-text'>"+imgstr+obj.text+"</div>\
+                                <img src='"+obj.sender.img+"' alt='"+obj.sender.name+"' >\
+                            </div>\
+                        </div>";
+            return text;
+        }
+        // 接收消息模板
+        function getmsgtmp(obj){
+            var imgstr = '',w = 150;
+            if(obj.uploadimg){
+                if(obj.fileobj.type == 'img'){
+                    if(obj.fileobj.width<100){ w = obj.fileobj.width;}
+                    imgstr = "<div class='img-content-show' style='padding-top:"+100/obj.fileobj.scale+"%;width:"+w+"px'><img src='../"+obj.uploadimg+"' class='text-img' data-show='show' onload='loadimg(this)'></div>";
+                }else{
+                    imgstr = "<div class='img-content-show' style='width:150px;height:150px;'><a href='../"+obj.uploadimg+"' download='"+obj.fileobj.name+"'><img src='../user/"+obj.fileobj.type+".png' class='text-img' onload='loadimg(this)'></a></div>";
+                }
+            }
+            var text = "<div class='chat-item'>\
+                            <div class='msgname msgname-get'>"+obj.sender.name+"</div>\
+                            <div class='chat-list chat-other'>\
+                                <img src='"+obj.sender.img+"' alt='"+obj.sender.name+"'>\
+                                <div class='chat-text'>"+imgstr+obj.text+"</div>\
+                            </div>\
+                        </div>";
+            return text;
+        } 
+        // 抖动消息模板
+        function shaketmp(obj){
+            var text = "<div class='chat-item' style='text-align:center;'>\
+                    <div class='shake'>"+obj.text+"</div>\
+                </div>";
+            return text;
+        }
+        // 时间模板
+        function timetmp(obj){
+            var text = "<div class='chat-item'><div class='time-item'>"+obj.time+"</div></div>";
+            return text;
+        }
+        // 提示模板
+        function tiptmp(obj){
+            var obj = obj?obj:{tips:'有新成员加入 涉及到金钱的你们还请注意!'};
+            var text = "<div class='chat-item chat-tip-on'><div class='chat-tips'><span class='glyphicon glyphicon-exclamation-sign' aria-hidden='true'></span><span>"+obj.tips+"</span></div></div>";
+            return text;
+        }
+        // 空白 模板
+        function blanktmp(){
+            var text = "<div class='blank-show'> </div>";
+            return text;
+        }
+        // 创建聊天新容器
+        function createchatroom(id,style){
+            var text = "<div class='conetent-text-box scrollbar' id='id_"+id+"' style='"+style+"'>\
+                            <div class='textbox'></div>\
+                        </div>";
+            return text;
+        }
+        // unit 工具时间戳格式化
+        function formatDate(t){
+            var date = new Date(t);  
+            var y = date.getFullYear();    
+            var m = date.getMonth() + 1;    
+            m = m < 10 ? ('0' + m) : m;    
+            var d = date.getDate();    
+            d = d < 10 ? ('0' + d) : d;    
+            var h = date.getHours();  
+            h = h < 10 ? ('0' + h) : h;  
+            var minute = date.getMinutes();  
+            var second = date.getSeconds();  
+            minute = minute < 10 ? ('0' + minute) : minute;  
+            second = second < 10 ? ('0' + second) : second; 
+            return y + '-' + m + '-' + d+' '+h+':'+minute+':'+second;   
+        }
+        //  事件 
+        $('.user-img div').on('click',function(){
+            $(this).siblings().find('span').removeClass('glyphicon glyphicon-ok');
+            $(this).find('span').addClass('glyphicon glyphicon-ok');
+        })
+        $('.btn-go').on('click',function(){
+            var img = $('.user-img div').find('.glyphicon-ok').prev().attr('src');
+            var username = $('#usernameval').val();
+            if(!username){
+                $('.username').css({color:'#D8231D'});
+                $('#usernameval').css({borderColor:'#D8231D'});
+                return;
+            }
+
+            //  设置链接用户信息
+            senderInfo.id = socket.id;
+            senderInfo.name = username;
+            senderInfo.img = img;
+
+            socket.emit('loginIn',senderInfo);
+            $('.modal-show').fadeOut(800);
+        })
+        // 获取接收者的id
+        $('.content-bar').on('click','li',function(){
+
+            $(this).addClass('active').siblings().removeClass('active');
+            $(this).find('.breath').remove();
+
+            var name = $(this).find('b').text(),
+                id = $(this).find('span').attr('id'),
+                ids =$(this).find('span').attr('ids')?$(this).find('span').attr('ids'):id,
+                img = $(this).find('img').attr('src');
+
+            //  设置接收者信息
+            if(id != 'ALLUser'){
+                //  指定聊天对象
+                receiveInfo.name = name;
+                receiveInfo.id = id;
+                receiveInfo.img = img;
+                
+                if($('#id_'+ids).length!=0){
+                    //  已经存在
+                    $('#id_'+ids).show().siblings().hide();
+                }else{
+                    //  动态生成
+                    //  没有聊天窗口创建聊天窗口
+                    $('.content-info').append(createchatroom(ids));
+                    $('#id_'+ids).siblings().hide();
+                }
+                // 添加 ids 属性
+                if(!$(this).find('span').attr('ids')){
+                    $(this).find('span').attr('ids',ids);
+                }
+                contactid = ids;
+            }else{
+                //  群聊
+                receiveInfo.name = 'ALL';
+                receiveInfo.id = 'ALL';
+                receiveInfo.img = 'ALL';
+                contactid = 'ALL';
+                $('#id_ALL').show().siblings().hide();
+
+            }
+            
+        })
+        
+         // 发送消息
+         $('.send-btn').on('click',function(){
+            var text = $('#show-text').val();
+            if(text.length!=0){
+                socket.emit('message',{
+                    text:text,
+                    sender:senderInfo,
+                    receive:receiveInfo,
+                    contactid:contactid,
+                    timeTip:new Date().getTime()
+                });
+            }
+        })
+        // xiu
+        $('.doudon').on('click',function(){
+            if($('.chat-interface').hasClass('shake-animate')){
+                return;
+            }
+            socket.emit('message',{
+                text:'对方给你发送了一个抖动',
+                sender:senderInfo,
+                receive:receiveInfo,
+                contactid:contactid,
+                shake:true,
+                timeTip:new Date().getTime()
+            });
+        })
+        //  emji 图像
+        $('.icon-tip').on('click',function(e){
+            e.stopPropagation();
+            $('.icon-style').toggle();
+        })
+        $('.icon-style').on('click',function(e){
+            e.stopPropagation();
+            var val = $('#show-text').val(),text='';
+            if(e.target.nodeName=='SPAN'){
+                text = $(e.target).text();
+            }
+            $('#show-text').val(val+text);
+        })
+        $(document).on('click',function(e){
+            $('.icon-style').hide();
+        })
+        // 回车触发发送消息
+        $(document).keyup(function(event){
+            if(event.keyCode ==13){
+                $('.send-btn').trigger('click');
+            }
+        });
+        ///////浏览器 关闭事件 用户离开  status 是用户状态 0  表示退出  1   表示离开状态  2  表示在线状态
+        window.onbeforeunload = function(){
+            socket.emit('loginOut',{senderInfo:senderInfo,contactid:contactid,status:0})
+        }
+        document.addEventListener('visibilitychange',function(){
+            if(document.visibilityState=='hidden') {   
+                socket.emit('loginOut',{senderInfo:senderInfo,contactid:contactid,status:1})
+            }else{
+                socket.emit('loginOut',{senderInfo:senderInfo,contactid:contactid,status:2})
+            }
+        });
+        $('.content-info').on('click','.text-img',function(){
+            var src = $(this).attr('src'),show = $(this).attr('data-show');
+            if(show=='show'){
+                $('.imgBox').fadeIn(800);
+                $('.autoimg img').attr('src',src);
+            }
+            
+        })
+        $('.imgBox').on('click',function(e){
+            if(e.target.nodeName == 'IMG')return;
+            $('.imgBox').fadeOut(500);
+        })
+        //  图片上传
+        upload('.upimg',
+            function(){
+                $('.spinner-').show();
+            },
+            function(data,id){
+                
+            },
+            function(data,obj){
+
+                socket.emit('message',{
+                        text:'',
+                        sender:senderInfo,
+                        receive:receiveInfo,
+                        contactid:contactid,
+                        uploadimg:data.url,
+                        fileobj:obj,
+                        timeTip:new Date().getTime()
+                });
+
+                $('.spinner-').hide();
+            },
+            function(data,id){
+                
+                
+            },'chatroom/chatimg'
+        );
+        //  图片预加载
+        function loadimg(img){
+            $(img).css({opacity:1}).parent().css({background:'none'});
+        }
+        // 判断是设备
+        if (browser.versions.mobile) {
+            $('.info-3').on('click',function(){
+                $('.contact-bar').toggleClass('trans')
+            });
+            $('.content-bar').on('click','li',function(){
+                $('.contact-bar').removeClass('trans');
+                if($('.breath').length==0){
+                    $('.info-3').removeClass('tipMsg');
+                }
+            })
+        }  
+  
+    
+    </script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="./ui/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/index.css">
+</head>
+<body>
+    <div class="container main">
+        <div class="row">
+            <!-- 左边栏 -->
+            <div class="col-md-3 col-xs-4">
+                <div class="panel panel-info">
+                    <div class="panel-heading">user info</div>
+                    <div class="panel-body">
+                        昵称：<span id="span-nickName"></span>
+                    </div>
+                </div>
+                <!-- user list -->
+                <div class="panel panel-warning">
+                    <div class="panel-heading">user list</div>
+                    <div class="panel-body" id="app-user-list-body">
+                        <table class="table table-bordered table-condensed" id="table-userList">
+                            <tr class="success">
+                                <td>在线列表</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- 右边栏 -->
+            <div class="col-md-9  col-xs-8">
+                <div class="panel panel-danger">
+                    <div class="panel-heading">会话【all】</div>
+                    <div class="panel-body" id="app-chat-body">
+                        <div class="app-chat-content">
+                            
+                        </div>
+                        <div class="app-chat-operator">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="el-input-msg">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-danger" id="btn-send">
+                                        send <i class="glyphicon glyphicon-send"></i>
+                                    </button>
+                                    <button class="btn btn-primary" id="send-file">
+                                        发送文件<i class="glyphicon glyphicon-file"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="backup"></div>
+    <div class="app-file-continer">
+        <div class="input-group">
+            <input type="file" class="form-control" id="el_file">
+            <span class="input-group-btn">
+                <button class="btn btn-warning" id="el-btn-file-send">发送</button>
+                <button class="btn btn-default" id="el-btn-file-cancel">取消</button>
+            </span>
+        </div>
+    </div>
+    <div id="el-template">
+        <div class="col-md-7 col-xs-7 app-msg-penal ${pullRight}">
+            <div class="app-msg-heading ${text-right}">
+                <span class="${bgColor} app-msg-tip ${pullRight}">
+                    <i class="glyphicon ${info-icon}"></i>
+                    ${info}
+                </span>
+                <span class="label-default app-msg-tip">
+                    <i class="glyphicon glyphicon-time"></i>
+                    ${time}
+                </span>
+            </div>
+            <div class="app-msg-body">
+                ${msg}
+            </div>
+        </div>
+    </div>
+    <script src="js/socket.io.js"></script>
+    <script src="./ui/jquery-3.3.1.min.js"></script>
+    <script src="./ui/js/bootstrap.min.js"></script>
+    <script src="./js/b.js"></script>
+</body>
+</html>

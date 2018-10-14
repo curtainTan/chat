@@ -1,0 +1,82 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+
+
+.main{
+    padding-top: 40px;
+}
+
+#el-template{
+    display: none;
+}
+
+.app-chat-content{
+    height: -webkit-calc(100% - 50px);
+    overflow: auto;
+}
+
+.app-chat-operator{
+    margin-top: 10px;
+}
+/* 消息面板样式 */
+
+
+.app-msg-penal{
+    border: 1px solid rgb(255, 145, 55);
+    border-radius: 5px;
+    margin: 15px 0;
+}
+
+.app-msg-heading{
+    margin-top: -15px;
+    /* font-size: 10px; */
+}
+
+.app-msg-tip{
+    font-size: 12px;
+    border-radius: 5px;
+    color: white;
+    padding: 5px;
+    margin: 0px 8px;
+}
+.app-msg-body{
+    padding: 10px 0px;
+}
+.app-msg-body img{
+    width: 40%;
+}
+
+.backup{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    background: rgb(201, 201, 201);
+    opacity: .6;
+    display: none;
+}
+.app-file-continer{
+    position: absolute;
+    top: 50%;
+    bottom: 50%;
+    right: 50%;
+    left: 50%;
+    z-index: 100;
+    padding: 10px;
+    width: 400px;
+    margin-left: -200px;
+    display: none;
+}
+
+
+.hide{
+    display: none;
+}
+
+
+
+
