@@ -12,7 +12,7 @@
     <div class="container main">
         <div class="row">
             <!-- 左边栏 -->
-            <div class="col-md-3 col-xs-4">
+            <div class="col-md-3">
                 <div class="panel panel-info">
                     <div class="panel-heading">user info</div>
                     <div class="panel-body">
@@ -32,7 +32,7 @@
                 </div>
             </div>
             <!-- 右边栏 -->
-            <div class="col-md-9  col-xs-8">
+            <div class="col-md-9">
                 <div class="panel panel-danger">
                     <div class="panel-heading">会话【all】</div>
                     <div class="panel-body" id="app-chat-body">
@@ -84,6 +84,25 @@
             </div>
         </div>
     </div>
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel"></h4>
+                </div>
+                <div class="modal-body">
+                    ${name}想和你进行私聊.
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">拒绝</button>
+                <button type="button" id="allow" class="btn btn-primary">同意</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="js/socket.io.js"></script>
     <script src="./ui/jquery-3.3.1.min.js"></script>
     <script src="./ui/js/bootstrap.min.js"></script>

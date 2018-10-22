@@ -14,8 +14,10 @@ $(function(){
     var $elBtnFile = $('#send-file')
     var $elBtnSendFile = $('#el-btn-file-send')
     var $elBtnFileCancel = $('#el-btn-file-cancel')
+    var $elmyModal = $('#myModal')
     //定义io连接
-    var client = io.connect('http://localhost:8000',{
+    // var client = io.connect('http://132.232.45.108:8000',{
+    var client = io.connect('http://132.232.45.108:8000',{
         reconnectionAttempts: 3,
         reconnection : true,
         reconnectionDelay : 1000,
@@ -101,6 +103,7 @@ $(function(){
         $elUserList.find('tr').not(':eq(0)').remove()
         list.forEach( function( item ){
             var $tr = $( `<tr><td> ${item}<button class="btn btn-success pull-right ask" >加好友</button></td></tr>` )
+            // var $tr = $( `<tr><td> ${item}<button data-toggle="modal" data-target="#myModal" class="btn btn-success pull-right ask" >加好友</button></td></tr>` )
             $elUserList.append($tr)
         })
         var $elAsk = document.getElementsByClassName('ask')
@@ -177,12 +180,21 @@ $(function(){
 
     client.on('client.askChat', function(data){
         if( data.name === nickName ){
-            var r=confirm( data.askName +  "想和你进行私聊。。。");
-            if( r === true ){
-                client.emit( 'server.allow', data)
-            }else{
-                client.emit( 'server.rej', data)
-            }
+            var str =  $elmyModal.html().replace('${name}', data.askName)
+            $elmyModal.html(str)
+            $elmyModal.modal('show');
+            var allow = false
+            $('#allow').on('click', function(){
+                allow = true
+                $elmyModal.modal('hide')
+            })
+            $elmyModal.on('hidden.bs.modal', function(){
+                if(allow){
+                    client.emit( 'server.allow', data)
+                }else{
+                    client.emit( 'server.rej', data)
+                }
+            })
         }
     })
     client.on('client.allow', function(data){
@@ -207,35 +219,15 @@ $(function(){
         }
         writeMsg( 'user', msg,  data.nickName, data.clientId === client.id  )
     })
+    // $('#myModal').on('hidden.bs.modal', function(e){
+    //     console.log('此处是',e)
+    // })
 
 
 
 
 
 })
-
-// setTimeout( function(){
-//     var $elAsk = document.getElementsByClassName('ask')
-//     console.log($elAsk)
-//     var uslist = Array.from($elAsk)
-//     console.log(uslist)
-
-
-//     for( let i = 0; i < uslist.length; i++ ){
-//         uslist[i].onclick = function(){
-//             console.log(i)
-//             var node = uslist[i].parentNode
-//             console.log('此处是父节点')
-//             console.log(node)
-//             console.log(node.innerText)
-//         }
-//     }
-
-// }, 2000 )
-
-
-
-
 
 
 
