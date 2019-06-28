@@ -17,8 +17,8 @@
 [直达](http://chat.curtaintan.club/)
 
 ### 项目截图：
-<a><img src="./photo/1.png" width="400" /></a>
-<a><img src="./photo/2.png" width="400" /></a>
-<a><img src="./photo/3.png" width="400" /></a>
+<a><img src="photo/1.png" width="400" /></a>
+<a><img src="photo/2.png" width="400" /></a>
+<a><img src="photo/3.png" width="400" /></a>
 
 
